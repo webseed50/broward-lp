@@ -1,0 +1,8 @@
+{
+ "d": {
+  "__type": "BCPAClient.WcfServiceBCPA.SearchResult",
+  "ExtensionData": {},
+  "TotalAmountOfRecordsFoundk__BackingField": 0,
+  "resultListk__BackingField": []
+ }
+}
