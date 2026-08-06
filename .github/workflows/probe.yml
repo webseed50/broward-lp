@@ -6,42 +6,55 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-      - name: BCPA format test
+      - name: Tri-county feasibility probe
         run: |
           mkdir -p data/logs
-          python3 - > data/logs/bcpa_probe.txt 2>&1 <<'PY'
-          import json, urllib.request, time
-          B="https://web.bcpa.net/BcpaClient/search.aspx"
-          H={"Content-Type":"application/json; charset=utf-8","User-Agent":"Mozilla/5.0"}
-          def post(m,p):
-              r=urllib.request.Request(f"{B}/{m}",data=json.dumps(p).encode(),headers=H)
-              return json.loads(urllib.request.urlopen(r,timeout=30).read().decode())
-          variants=["JEUNE, DEMETRIUS","JEUNE,DEMETRIUS","JEUNE DEMETRIUS",
-                    "SMITH, JOHN","SMITH JOHN","1600 PENNSYLVANIA"]
-          for v in variants:
-              time.sleep(0.5)
-              try:
-                  d=post("GetData",{"value":v,"cities":"","orderBy":"NAME",
-                      "pageNumber":"1","pageCount":"10","arrayOfValues":"",
-                      "selectedFromList":"false","totalCount":"Y"})["d"]
-                  n=d.get("TotalAmountOfRecordsFoundk__BackingField")
-                  print(f"{v!r}: {n} results")
-                  lst=d.get("resultListk__BackingField") or []
-                  if lst:
-                      print("  KEYS:", sorted(lst[0].keys()))
-                      print("  ROW:", json.dumps(lst[0])[:600])
-              except Exception as e:
-                  print(f"{v!r}: ERROR {e}")
+          python3 - > data/logs/county_probe.txt 2>&1 <<'PY'
+          import re, urllib.request
+          H = {"User-Agent": "Mozilla/5.0", "Accept": "*/*"}
+          def get(url):
+              r = urllib.request.Request(url, headers=H)
+              return urllib.request.urlopen(r, timeout=25).read().decode("utf-8", "replace")
+          def probe(label, base, paths):
+              print(f"##### {label} #####")
+              for p in paths:
+                  try:
+                      b = get(f"{base}/{p}")
+                      print(f"  {p} -> {len(b)}b :: {b[:250]!r}")
+                  except Exception as e:
+                      print(f"  {p} -> FAILED {e}")
+              print()
+          lm_paths = ["api/searchCriterias/document", "api/documentTypes",
+                      "api/search/searchCriteria", "Home/GetDocumentTypes",
+                      "Document/GetSearchResults", ""]
+          probe("LEE LandmarkWeb", "https://or.leeclerk.org/LandMarkWeb", lm_paths)
+          probe("PALM BEACH erec", "https://erec.mypalmbeachclerk.com", lm_paths)
+          probe("PALM BEACH /LandMarkWeb", "https://erec.mypalmbeachclerk.com/LandMarkWeb", lm_paths)
+          # Polk: discover the official-records search app from the clerk page
+          try:
+              page = get("https://www.polkclerkfl.gov/184/Official-Records")
+              links = sorted(set(re.findall(r'https?://[a-zA-Z0-9.\-/]*polk[a-zA-Z0-9.\-/]*', page)))
+              print("##### POLK discovered links #####")
+              for l in links[:30]: print("  ", l)
+              for l in links:
+                  if any(k in l.lower() for k in ("ori", "oncore", "records", "search", "pro")):
+                      try:
+                          b = get(l)
+                          print(f"  FETCH {l} -> {len(b)}b :: {b[:200]!r}")
+                      except Exception as e:
+                          print(f"  FETCH {l} -> FAILED {e}")
+          except Exception as e:
+              print("POLK discovery failed:", e)
           PY
-          cat data/logs/bcpa_probe.txt
+          cat data/logs/county_probe.txt
       - name: Commit
         if: always()
         run: |
           git config user.name "broward-lp-bot"
           git config user.email "actions@github.com"
           git add -A data/
-          git diff --staged --quiet || git commit -m "bcpa probe"
+          git diff --staged --quiet || git commit -m "county probe"
           git push || true
