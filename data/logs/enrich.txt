@@ -1,2 +1,4 @@
 to enrich: 250
-enriched this run: 235; prop table: 250 rows, 0 with address
+120613566: API FAILED HTTP Error 500: Internal Server Error
+hits this run: 27; prop table: 330 rows, 27 with address
+csv updated with property columns
