@@ -1,41 +1,21 @@
 #!/usr/bin/env python3
-"""Enrich LP records with BCPA property data (address, value, homestead)."""
+"""Enrich LP records with BCPA property data (address + folio via owner search)."""
 import json, os, re, sqlite3, sys, time, urllib.request
 
 DB = "data/broward.db"
 BASE = "https://web.bcpa.net/BcpaClient/search.aspx"
-HDRS = {"Content-Type": "application/json; charset=utf-8",
-        "User-Agent": "Mozilla/5.0 (public-records research)"}
+HDRS = {"Content-Type": "application/json; charset=utf-8", "User-Agent": "Mozilla/5.0"}
 MAX = int(os.environ.get("ENRICH_MAX", "250"))
-HOA = re.compile(r'\b(ASSOCIATION|ASSN|CONDOMINIUM|HOA|BANK|MORTGAGE|LLC|INC|TRUST|CORP)\b')
-
-def post(method, payload):
-    req = urllib.request.Request(f"{BASE}/{method}",
-        data=json.dumps(payload).encode(), headers=HDRS)
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read().decode())
+ENTITY = re.compile(r'\b(ASSOCIATION|ASSN|CONDOMINIUM|HOA|BANK|MORTGAGE|LLC|INC|TRUST|CORP)\b')
 
 def name_search(name):
-    return post("GetData", {"value": name, "cities": "", "orderBy": "NAME",
-        "pageNumber": "1", "pageCount": "10", "arrayOfValues": "",
-        "selectedFromList": "false", "totalCount": "Y"})
-
-def pick(d, *keys):
-    if not isinstance(d, dict): return ""
-    low = {k.lower(): v for k, v in d.items()}
-    for k in keys:
-        v = low.get(k.lower())
-        if v not in (None, "", "null"): return str(v).strip()
-    return ""
-
-def flatten(obj):
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            if isinstance(v, list) and v and isinstance(v[0], dict):
-                return v
-            got = flatten(v)
-            if got: return got
-    return obj if isinstance(obj, list) and obj and isinstance(obj[0], dict) else None
+    payload = {"value": name, "cities": "", "orderBy": "NAME",
+               "pageNumber": "1", "pageCount": "10", "arrayOfValues": "",
+               "selectedFromList": "false", "totalCount": "Y"}
+    req = urllib.request.Request(f"{BASE}/GetData",
+        data=json.dumps(payload).encode(), headers=HDRS)
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.loads(r.read().decode())["d"]
 
 def main():
     db = sqlite3.connect(DB)
@@ -43,6 +23,9 @@ def main():
         cfn TEXT PRIMARY KEY, matched_name TEXT, folio TEXT, situs TEXT,
         city TEXT, use_code TEXT, just_value TEXT, homestead TEXT,
         last_sale TEXT, match_note TEXT, fetched_at TEXT);""")
+    # retry rows from the broken first batch (no folio, no address)
+    db.execute("DELETE FROM prop WHERE folio='' AND situs=''")
+    db.commit()
     todo = db.execute("""SELECT l.cfn,
         (SELECT p.name FROM party p WHERE p.cfn=l.cfn AND p.role='R'
          AND instr(p.name,',')>0 ORDER BY p.seq LIMIT 1)
@@ -50,47 +33,55 @@ def main():
         ORDER BY substr(l.rec_date,7)||substr(l.rec_date,1,2)||substr(l.rec_date,4,2) DESC
         LIMIT ?""", (MAX,)).fetchall()
     print(f"to enrich: {len(todo)}")
-    dumped = done = 0
-    os.makedirs("data/logs", exist_ok=True)
+    hits = 0
     for cfn, owner in todo:
-        time.sleep(0.5)
-        if not owner or HOA.search(owner.upper()):
-            db.execute("INSERT OR REPLACE INTO prop VALUES(?,?,?,?,?,?,?,?,?,?,datetime('now'))",
-                       (cfn, owner or "", "", "", "", "", "", "", "", "no-individual-owner"))
+        if not owner or ENTITY.search(owner.upper()):
+            db.execute("INSERT OR REPLACE INTO prop VALUES(?,?,'','','','','','','','no-individual-owner',datetime('now'))",
+                       (cfn, owner or ""))
             continue
+        time.sleep(0.5)
         try:
-            resp = name_search(owner)
+            d = name_search(owner)
         except Exception as e:
             print(f"{cfn}: API FAILED {e}"); break
-        if not dumped:
-            json.dump(resp, open("data/logs/bcpa_sample.json", "w"), indent=1)
-            dumped = 1
-        rows = flatten(resp) or []
-        target = owner.split(",")[0].strip().upper()
+        rows = d.get("resultListk__BackingField") or []
+        target = owner.upper().replace(" ", "")
         best = None
         for r in rows:
-            nm = pick(r, "ownerName1", "ownerName", "name", "owner").upper()
-            if target and target in nm: best = r; break
-        if best is None and rows: best = rows[0]
+            nm = (r.get("ownerName1", "") + r.get("ownerName2", "")).upper().replace(" ", "")
+            if target[:20] in nm: best = r; break
+        note = "matched"
+        if best is None and rows:
+            best, note = rows[0], "first-result"
         if best:
-            db.execute("INSERT OR REPLACE INTO prop VALUES(?,?,?,?,?,?,?,?,?,?,datetime('now'))",
-                (cfn, owner,
-                 pick(best, "folioNumber", "folio", "parcelId"),
-                 pick(best, "situsAddress1", "situsAddress", "situs", "address"),
-                 pick(best, "situsCity", "city"),
-                 pick(best, "useCode", "use"),
-                 pick(best, "sohValue", "justValue", "just"),
-                 pick(best, "homestead", "exemption"),
-                 pick(best, "saleDate1", "lastSaleDate", "saleDate"),
-                 "matched" if target in pick(best, "ownerName1", "ownerName", "name", "owner").upper() else "first-result"))
+            city = (best.get("siteAddress2") or "").split(",")[0].strip()
+            db.execute("INSERT OR REPLACE INTO prop VALUES(?,?,?,?,?,'','','','',?,datetime('now'))",
+                (cfn, owner, best.get("folioNumber", ""),
+                 (best.get("siteAddress1") or "").strip(), city, note))
+            hits += 1
         else:
-            db.execute("INSERT OR REPLACE INTO prop VALUES(?,?,?,?,?,?,?,?,?,?,datetime('now'))",
-                       (cfn, owner, "", "", "", "", "", "", "", "no-match"))
-        done += 1
+            db.execute("INSERT OR REPLACE INTO prop VALUES(?,?,'','','','','','','','no-match',datetime('now'))",
+                       (cfn, owner))
     db.commit()
     n = db.execute("SELECT COUNT(*), SUM(situs!='') FROM prop").fetchone()
-    print(f"enriched this run: {done}; prop table: {n[0]} rows, {n[1]} with address")
+    print(f"hits this run: {hits}; prop table: {n[0]} rows, {n[1]} with address")
+    # merge into the lead CSV
+    import csv
+    src = list(csv.reader(open("data/lis_pendens.csv")))
+    hdr, body = src[0], src[1:]
+    if "property_address" not in hdr:
+        hdr += ["property_address", "property_city", "bcpa_folio", "match_note"]
+    pm = {r[0]: r[1:] for r in db.execute("SELECT cfn,situs,city,folio,match_note FROM prop")}
+    out = []
+    for row in body:
+        cfn = row[1]
+        row = row[:11] + list(pm.get(cfn, ("", "", "", "")))
+        out.append(row)
+    with open("data/lis_pendens.csv", "w", newline="") as fh:
+        w = csv.writer(fh); w.writerow(hdr); w.writerows(out)
+    print("csv updated with property columns")
     return 0
 
 if __name__ == "__main__":
     sys.exit(main())
+
