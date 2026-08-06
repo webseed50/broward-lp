@@ -1,0 +1,3 @@
+banner on 21 -> b'220 TitanSTP 2.0.34.2907 Ready.\r\n'
+implicit FTPS 990 FAILED: AttributeError 'FTP_TLS' object has no attribute 'af'
+SFTP 22 -> entries=3 sample=['Official_Records_Download', 'OR_Yearly_Exports', 'random books']
