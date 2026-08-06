@@ -9,57 +9,32 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Explore
+      - name: Sample real index files
         run: |
           pip install -q paramiko
-          mkdir -p data/logs data/samples
-          python3 - > data/logs/explore.txt 2>&1 <<'PY'
-          import paramiko, stat
+          mkdir -p data/samples
+          python3 - <<'PY'
+          import paramiko
           tr = paramiko.Transport(("BCFTP.Broward.org", 22))
           tr.connect(username="crpublic", password="crpublic")
           s = paramiko.SFTPClient.from_transport(tr)
-          def ls(path, depth=0, maxd=2):
-              try: items = s.listdir_attr(path)
-              except Exception as e:
-                  print("  "*depth + f"{path}: LIST FAILED {e}"); return
-              for a in sorted(items, key=lambda x: x.filename)[:60]:
-                  full = f"{path}/{a.filename}"
-                  if stat.S_ISDIR(a.st_mode):
-                      print("  "*depth + f"[D] {full}")
-                      if depth < maxd: ls(full, depth+1, maxd)
-                  else:
-                      print("  "*depth + f"    {full}  {a.st_size}")
-          ls("Official_Records_Download")
-          print("="*50)
-          ls("OR_Yearly_Exports")
-          # grab the smallest non-image file under Official_Records_Download as a sample
-          import posixpath
-          best = None
-          def find(path, depth=0):
-              global best
-              if depth > 3: return
-              try: items = s.listdir_attr(path)
-              except Exception: return
-              for a in items:
-                  full = posixpath.join(path, a.filename)
-                  if stat.S_ISDIR(a.st_mode): find(full, depth+1)
-                  else:
-                      lo = a.filename.lower()
-                      if any(lo.endswith(e) for e in (".tif",".tiff",".pdf",".jpg",".zip")): continue
-                      if a.st_size and a.st_size < 30_000_000:
-                          if best is None or a.st_size < best[1]: best = (full, a.st_size)
-          find("Official_Records_Download")
-          if best:
-              print("SAMPLING:", best)
-              s.get(best[0], "data/samples/" + best[0].replace("/", "__"))
+          D = "Official_Records_Download"
+          for f in ["07-31-2026doc-ver.txt", "07-31-2026nme-ver.txt",
+                    "07-31-2026lgl-ver.txt", "07-31-2026lnk-ver.txt",
+                    "07-31-2026doc-ver-rng.txt"]:
+              s.get(f"{D}/{f}", f"data/samples/{f}")
+              print("got", f)
+          with s.open("OR_Yearly_Exports/CY2025doc-rec.txt", "r") as fh:
+              head = fh.read(120_000)
+          open("data/samples/CY2025doc-rec.head.txt", "wb").write(head)
+          print("got yearly head")
           tr.close()
           PY
-          cat data/logs/explore.txt
       - name: Commit
         if: always()
         run: |
           git config user.name "broward-lp-bot"
           git config user.email "actions@github.com"
           git add -A data/
-          git diff --staged --quiet || git commit -m "explore $(date -u +%FT%TZ)"
+          git diff --staged --quiet || git commit -m "samples $(date -u +%FT%TZ)"
           git push || true
