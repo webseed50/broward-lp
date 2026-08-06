@@ -6,35 +6,42 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Sample real index files
+      - name: BCPA format test
         run: |
-          pip install -q paramiko
-          mkdir -p data/samples
-          python3 - <<'PY'
-          import paramiko
-          tr = paramiko.Transport(("BCFTP.Broward.org", 22))
-          tr.connect(username="crpublic", password="crpublic")
-          s = paramiko.SFTPClient.from_transport(tr)
-          D = "Official_Records_Download"
-          for f in ["07-31-2026doc-ver.txt", "07-31-2026nme-ver.txt",
-                    "07-31-2026lgl-ver.txt", "07-31-2026lnk-ver.txt",
-                    "07-31-2026doc-ver-rng.txt"]:
-              s.get(f"{D}/{f}", f"data/samples/{f}")
-              print("got", f)
-          with s.open("OR_Yearly_Exports/CY2025doc-rec.txt", "r") as fh:
-              head = fh.read(120_000)
-          open("data/samples/CY2025doc-rec.head.txt", "wb").write(head)
-          print("got yearly head")
-          tr.close()
+          mkdir -p data/logs
+          python3 - > data/logs/bcpa_probe.txt 2>&1 <<'PY'
+          import json, urllib.request, time
+          B="https://web.bcpa.net/BcpaClient/search.aspx"
+          H={"Content-Type":"application/json; charset=utf-8","User-Agent":"Mozilla/5.0"}
+          def post(m,p):
+              r=urllib.request.Request(f"{B}/{m}",data=json.dumps(p).encode(),headers=H)
+              return json.loads(urllib.request.urlopen(r,timeout=30).read().decode())
+          variants=["JEUNE, DEMETRIUS","JEUNE,DEMETRIUS","JEUNE DEMETRIUS",
+                    "SMITH, JOHN","SMITH JOHN","1600 PENNSYLVANIA"]
+          for v in variants:
+              time.sleep(0.5)
+              try:
+                  d=post("GetData",{"value":v,"cities":"","orderBy":"NAME",
+                      "pageNumber":"1","pageCount":"10","arrayOfValues":"",
+                      "selectedFromList":"false","totalCount":"Y"})["d"]
+                  n=d.get("TotalAmountOfRecordsFoundk__BackingField")
+                  print(f"{v!r}: {n} results")
+                  lst=d.get("resultListk__BackingField") or []
+                  if lst:
+                      print("  KEYS:", sorted(lst[0].keys()))
+                      print("  ROW:", json.dumps(lst[0])[:600])
+              except Exception as e:
+                  print(f"{v!r}: ERROR {e}")
           PY
+          cat data/logs/bcpa_probe.txt
       - name: Commit
         if: always()
         run: |
           git config user.name "broward-lp-bot"
           git config user.email "actions@github.com"
           git add -A data/
-          git diff --staged --quiet || git commit -m "samples $(date -u +%FT%TZ)"
+          git diff --staged --quiet || git commit -m "bcpa probe"
           git push || true
