@@ -1,0 +1,120 @@
+##### MIAMI-DADE StandardSearch.aspx FULL BODY #####
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirecting...</title>
+        <script type="text/javascript">
+        // Process query parameters and redirect to SearchResults
+        (function() {
+            var searchParams = new URLSearchParams(window.location.search);
+            
+            // Verify that we have the necessary parameters
+            if (!searchParams.has('search') || !searchParams.has('Rec_Book') || !searchParams.has('Rec_Page')) {
+                // Redirect to homepage if parameters are missing
+                redirectToHome();
+                return;
+            }
+
+            var bookNumber = searchParams.get('Rec_Book');
+            var pageNumber = searchParams.get('Rec_Page');
+            
+            // Determine the base URL for the application
+            var baseUrl = window.location.pathname.includes('/officialrecords') 
+                ? '/officialrecords' 
+                : '';
+            
+            console.log('Starting search with Book:', bookNumber, 'Page:', pageNumber);
+            
+            // Function to redirect to home in case of error
+            function redirectToHome() {
+                console.log('Redirecting to home...');
+                window.location.href = `${baseUrl}`;
+            }
+            
+            // This legacy redirect always skips server-side verification (skipCaptcha=true),
+            // so no verification token needs to be obtained here.
+            async function executeSearch() {
+                try {
+                    // Make API call
+                    console.log('Making API call...');
+                    var apiUrl = `${window.location.origin}${baseUrl}/api/home/recordingsearch?bookNumber=${bookNumber}&pageNumber=${pageNumber}&bookType=&searchType=Recording Book/Page&token=&skipCaptcha=true`;
+                    
+                    var response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json; charset=utf-8'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    var data = await response.json();
+                    console.log('API response received:', data);
+                    
+                    if (data && data.qs) {
+                        console.log('Redirecting to SearchResults...');
+                        window.location.href = `${baseUrl}/SearchResults?qs=${encodeURIComponent(data.qs)}`;
+                    } else {
+                        throw new Error('No query string received in response');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error in executeSearch:', error);
+                    // Redirect to homepage if something fails
+                    redirectToHome();
+                }
+            }
+            
+            // Execute the search
+            executeSearch();
+            
+        })();
+    </script>
+<script>NS_CSM_td=616276837;NS_CSM_pd=275116665;NS_CSM_u="/clm10";NS_CSM_col="AAAAAAUGJdnW4E+pA1aXO8RSxgnaAvRK4SWP2yI3/9FcVdMOPV15u7iyYIBqk7szL8xj5G7hYCn/ihAPVqXkmJGKf1VH";</script><script type="text/javascript">function sendTimingInfoInit(){setTimeout(sendTimingInfo,0)}function sendTimingInfo(){var wp=window.performance;if(wp){var c1,c2,t;c1=wp.timing;if(c1){var cm={};cm.ns=c1.navigationStart;if((t=c1.unloadEventStart)>0)cm.us=t;if((t=c1.unloadEventEnd)>0)cm.ue=t;if((t=c1.redirectStart)>0)cm.rs=t;if((t=c1.redirectEnd)>0)cm.re=t;cm.fs=c1.fetchStart;cm.dls=c1.domainLookupStart;cm.dle=c1.domainLookupEnd;cm.cs=c1.connectStart;cm.ce=c1.connectEnd;if((t=c1.secureConnectionStart)>0)cm.scs=t;cm.rqs=c1.requestStart;cm.rss=c1.responseStart;cm.rse=c1.responseEnd;cm.dl=c1.domLoading;cm.di=c1.domInteractive;cm.dcls=c1.domContentLoadedEventStart;cm.dcle=c1.domContentLoadedEventEnd;cm.dc=c1.domComplete;if((t=c1.loadEventStart)>0)cm.ls=t;if((t=c1.loadEventEnd)>0)cm.le=t;cm.tid=NS_CSM_td;cm.pid=NS_CSM_pd;cm.ac=NS_CSM_col;var xhttp=new XMLHttpRequest();if(xhttp){var JSON=JSON||{};JSON.stringify=JSON.stringify||function(ob){var t=typeof(ob);if(t!="object"||ob===null){if(t=="string")ob='"'+ob+'"';return String(ob);}else{var n,v,json=[],arr=(ob&&ob.constructor==Array);for(n in ob){v=ob[n];t=typeof(v);if(t=="string")v='"'+v+'"';else if(t=="object"&&v!==null)v=JSON.stringify(v);json.push((arr?"":'"'+n+'":')+String(v));}return(arr?"[":"{")+String(json)+(arr?"]":"}");}};xhttp.open("POST",NS_CSM_u,true);xhttp.send(JSON.stringify(cm));}}}}if(window.addEventListener)window.addEventListener("load",sendTimingInfoInit,false);else if(window.attachEvent)window.attachEvent("onload",sendTimingInfoInit);else window.onload=sendTimingInfoInit;</script></head>
+<body>
+    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h2>Processing search...</h2>
+        <p>Please wait while we process your request.</p>
+        <div style="margin-top: 20px;">
+            <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html> 
+
+##### PALM BEACH Home/Index inline endpoints #####
+   /Content/CSS/Home/FireFox.css
+   /Content/Site.css?v=1.5.151.0
+   /Content/bootstrap/bootstrap-responsive.css?v=1.5.151.0
+   /Content/bootstrap/bootstrap.blue.css?v=1.5.151.0
+   /Content/dataTables/jquery.dataTables.min.css
+   /Content/font-awesomeSubset/css/font-awesome.min.css
+   /Content/home.css?v=1.5.151.0
+   /Content/site.css?v=2025.8.22
+   /Home/Index
+   /RecordingActivity
+   /Scripts/JQuery-ui-1.12.1/jquery-ui.min.css
+   /Scripts/TableTools/media/css/TableTools.css?v=1.5.151.0
+   /Scripts/select2_latest/select2.min.css
+   /Scripts/videojs/video.css?v=1.5.151.0
+   https://discover.pbcgov.org/Pages/default.aspx
+   https://www.clerkecertify.com/OrderOfficialRecords?PublisherCode=12099
+   https://www.mypalmbeachclerk.com/
+   https://www.mypalmbeachclerk.com/about-us/privacy-policy-terms-of-use
+   javascript:void(0);
+  --- ajax-ish lines ---
+   $.ajax({
+   $.ajax({
+   $.ajax({
+   $.ajax({
+   $.ajax({
