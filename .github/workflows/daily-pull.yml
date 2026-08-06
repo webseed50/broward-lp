@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       backfill_years:
-        description: "Optional: e.g. CY2025 or CY2024,CY2025"
+        description: "Optional: e.g. CY2025"
         required: false
         default: ""
 permissions:
@@ -19,14 +19,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run pipeline
+      - name: Pull county records
         env:
           BACKFILL_YEARS: ${{ inputs.backfill_years }}
         run: |
           pip install -q paramiko
           mkdir -p data/logs
           python fetch_broward.py > data/logs/run.txt 2>&1 || echo "NONZERO EXIT" >> data/logs/run.txt
-          tail -20 data/logs/run.txt
+          tail -5 data/logs/run.txt
+      - name: Enrich with BCPA
+        run: |
+          python enrich_bcpa.py > data/logs/enrich.txt 2>&1 || echo "NONZERO EXIT" >> data/logs/enrich.txt
+          tail -5 data/logs/enrich.txt
       - name: Commit
         if: always()
         run: |
