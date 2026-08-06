@@ -1,0 +1,31 @@
+##### LEE LandmarkWeb #####
+  api/searchCriterias/document -> FAILED The read operation timed out
+  api/documentTypes -> FAILED The read operation timed out
+  api/search/searchCriteria -> FAILED The read operation timed out
+  Home/GetDocumentTypes -> FAILED The read operation timed out
+  Document/GetSearchResults -> FAILED The read operation timed out
+   -> FAILED The read operation timed out
+
+##### PALM BEACH erec #####
+  api/searchCriterias/document -> FAILED HTTP Error 404: Not Found
+  api/documentTypes -> FAILED HTTP Error 404: Not Found
+  api/search/searchCriteria -> FAILED HTTP Error 404: Not Found
+  Home/GetDocumentTypes -> FAILED HTTP Error 404: Not Found
+  Document/GetSearchResults -> FAILED HTTP Error 404: Not Found
+   -> 44629b :: '\r\n\r\n<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\r\n\r\n\r\n<link href="/Content/site.css?v=2025.8.22" rel="stylesheet" />\r\n\r\n\r\n\r\n<html lang="en">\r\n<head>\r\n    <meta http-equiv="X'
+
+##### PALM BEACH /LandMarkWeb #####
+  api/searchCriterias/document -> FAILED HTTP Error 404: Not Found
+  api/documentTypes -> FAILED HTTP Error 404: Not Found
+  api/search/searchCriteria -> FAILED HTTP Error 404: Not Found
+  Home/GetDocumentTypes -> FAILED HTTP Error 404: Not Found
+  Document/GetSearchResults -> FAILED HTTP Error 404: Not Found
+   -> FAILED HTTP Error 404: Not Found
+
+##### POLK discovered links #####
+   https://apps.polkcountyclerk.net/browserviewor/
+   https://pro.polkcountyclerk.net/PRO
+   https://www.instagram.com/polkclerkfl/
+   https://www.polkclerkfl.gov/188
+   https://www.polkclerkfl.gov/209
+  FETCH https://pro.polkcountyclerk.net/PRO -> FAILED <urlopen error timed out>
