@@ -1,0 +1,8 @@
+### PALM BEACH: mine JS for endpoints ###
+  scripts: ['/Scripts/html5.js', '/Scripts/jquery-3.5.1.min.js', '/Scripts/modernizr-1.7.min.js', '/Scripts/ShoppingCart.js?v=1.5.151.0', '/Scripts/jquery.validate.min.js', '/Scripts/jquery.validate.unobtrusive.min.js', '/Scripts/bootstrap/bootstrap.js?v=1.5.151.0', '/Scripts/validation.js?v=1.5.151.0', '/Scripts/videojs/video.js?v=1.5.151.0', '/Scripts/jquery.watermarkinput.js?v=1.5.151.0']
+
+### MIAMI-DADE: search flow ###
+  page1: 5547 bytes
+  cookies: ['ASP.NET_SessionId', 'RotatedActive', 'BIGipServer~external~coc_erec.mypalmbeachclerk.com_80', 'NSC_ESNS', 'NSC_JOeqtbnye4rqvqae52yysbdjdcwntcw']
+  body sample: <!DOCTYPE html> <html> <head>     <title>Redirecting...</title>         <script type="text/javascript">         // Process query parameters and redirect to SearchResults         (function() {             var searchParams = new URLSearchParams(window.location.search);                          // Verify that we have the necessary parameters             if (!searchParams.has('search') || !searchParam
+  page2: 5547 bytes; VIEWSTATE: False ; form fields: []
