@@ -1,0 +1,2 @@
+CONNECT FAILED: timed out
+NONZERO EXIT
