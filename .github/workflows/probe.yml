@@ -9,44 +9,57 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Probe
+      - name: Explore
         run: |
           pip install -q paramiko
-          mkdir -p data/logs
-          python3 - > data/logs/probe.txt 2>&1 <<'PY'
-          import socket, ssl, ftplib
-          HOST="BCFTP.Broward.org"; U=P="crpublic"
-          def t(label, fn):
-              try: print(label, "->", fn())
-              except Exception as e: print(label, "FAILED:", type(e).__name__, str(e)[:200])
-          def banner21():
-              s=socket.create_connection((HOST,21),timeout=20); s.settimeout(20)
-              try: d=s.recv(200)
-              except socket.timeout: return "TCP open, no banner in 20s"
-              return repr(d)
-          def ftps990():
-              raw=socket.create_connection((HOST,990),timeout=25)
-              ctx=ssl.create_default_context(); ctx.check_hostname=False; ctx.verify_mode=ssl.CERT_NONE
-              s=ctx.wrap_socket(raw, server_hostname=HOST)
-              f=ftplib.FTP_TLS(); f.context=ctx; f.sock=s; f.file=s.makefile("r"); f.welcome=f.getresp()
-              f.login(U,P); f.prot_p(); n=f.nlst()
-              return f"welcome={f.welcome!r} entries={len(n)} sample={n[:6]}"
-          def sftp22():
-              import paramiko
-              tr=paramiko.Transport((HOST,22)); tr.banner_timeout=25
-              tr.connect(username=U,password=P)
-              s=paramiko.SFTPClient.from_transport(tr); n=s.listdir("."); tr.close()
-              return f"entries={len(n)} sample={n[:6]}"
-          t("banner on 21", banner21)
-          t("implicit FTPS 990", ftps990)
-          t("SFTP 22", sftp22)
+          mkdir -p data/logs data/samples
+          python3 - > data/logs/explore.txt 2>&1 <<'PY'
+          import paramiko, stat
+          tr = paramiko.Transport(("BCFTP.Broward.org", 22))
+          tr.connect(username="crpublic", password="crpublic")
+          s = paramiko.SFTPClient.from_transport(tr)
+          def ls(path, depth=0, maxd=2):
+              try: items = s.listdir_attr(path)
+              except Exception as e:
+                  print("  "*depth + f"{path}: LIST FAILED {e}"); return
+              for a in sorted(items, key=lambda x: x.filename)[:60]:
+                  full = f"{path}/{a.filename}"
+                  if stat.S_ISDIR(a.st_mode):
+                      print("  "*depth + f"[D] {full}")
+                      if depth < maxd: ls(full, depth+1, maxd)
+                  else:
+                      print("  "*depth + f"    {full}  {a.st_size}")
+          ls("Official_Records_Download")
+          print("="*50)
+          ls("OR_Yearly_Exports")
+          # grab the smallest non-image file under Official_Records_Download as a sample
+          import posixpath
+          best = None
+          def find(path, depth=0):
+              global best
+              if depth > 3: return
+              try: items = s.listdir_attr(path)
+              except Exception: return
+              for a in items:
+                  full = posixpath.join(path, a.filename)
+                  if stat.S_ISDIR(a.st_mode): find(full, depth+1)
+                  else:
+                      lo = a.filename.lower()
+                      if any(lo.endswith(e) for e in (".tif",".tiff",".pdf",".jpg",".zip")): continue
+                      if a.st_size and a.st_size < 30_000_000:
+                          if best is None or a.st_size < best[1]: best = (full, a.st_size)
+          find("Official_Records_Download")
+          if best:
+              print("SAMPLING:", best)
+              s.get(best[0], "data/samples/" + best[0].replace("/", "__"))
+          tr.close()
           PY
-          cat data/logs/probe.txt
+          cat data/logs/explore.txt
       - name: Commit
         if: always()
         run: |
           git config user.name "broward-lp-bot"
           git config user.email "actions@github.com"
           git add -A data/
-          git diff --staged --quiet || git commit -m "probe $(date -u +%FT%TZ)"
+          git diff --staged --quiet || git commit -m "explore $(date -u +%FT%TZ)"
           git push || true
