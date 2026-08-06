@@ -1,0 +1,16 @@
+'JEUNE, DEMETRIUS': 2 results
+  KEYS: ['ExtensionData', '__type', 'folioNumber', 'ownerName1', 'ownerName2', 'siteAddress1', 'siteAddress2']
+  ROW: {"__type": "BCPAClient.WcfServiceBCPA.OwnerNamesProps", "ExtensionData": {}, "folioNumber": "494102BD0210", "ownerName1": "JEUNE,DEMETRIUS J", "ownerName2": "", "siteAddress1": "8010 HAMPTON BLVD #301", "siteAddress2": "NORTH LAUDERDALE, FL 33068"}
+'JEUNE,DEMETRIUS': 2 results
+  KEYS: ['ExtensionData', '__type', 'folioNumber', 'ownerName1', 'ownerName2', 'siteAddress1', 'siteAddress2']
+  ROW: {"__type": "BCPAClient.WcfServiceBCPA.OwnerNamesProps", "ExtensionData": {}, "folioNumber": "494102BD0210", "ownerName1": "JEUNE,DEMETRIUS J", "ownerName2": "", "siteAddress1": "8010 HAMPTON BLVD #301", "siteAddress2": "NORTH LAUDERDALE, FL 33068"}
+'JEUNE DEMETRIUS': 2 results
+  KEYS: ['ExtensionData', '__type', 'folioNumber', 'ownerName1', 'ownerName2', 'siteAddress1', 'siteAddress2']
+  ROW: {"__type": "BCPAClient.WcfServiceBCPA.OwnerNamesProps", "ExtensionData": {}, "folioNumber": "494102BD0210", "ownerName1": "JEUNE,DEMETRIUS J", "ownerName2": "", "siteAddress1": "8010 HAMPTON BLVD #301", "siteAddress2": "NORTH LAUDERDALE, FL 33068"}
+'SMITH, JOHN': 12 results
+  KEYS: ['ExtensionData', '__type', 'folioNumber', 'ownerName1', 'ownerName2', 'siteAddress1', 'siteAddress2']
+  ROW: {"__type": "BCPAClient.WcfServiceBCPA.OwnerNamesProps", "ExtensionData": {}, "folioNumber": "484105042950", "ownerName1": "SMITH,JOHN", "ownerName2": "", "siteAddress1": "10735 NW 64 CT", "siteAddress2": "PARKLAND, FL 33076"}
+'SMITH JOHN': 12 results
+  KEYS: ['ExtensionData', '__type', 'folioNumber', 'ownerName1', 'ownerName2', 'siteAddress1', 'siteAddress2']
+  ROW: {"__type": "BCPAClient.WcfServiceBCPA.OwnerNamesProps", "ExtensionData": {}, "folioNumber": "504101020720", "ownerName1": "JOHNSON,SMITH", "ownerName2": "", "siteAddress1": "224 NW 42 AVE", "siteAddress2": "PLANTATION, FL 33317"}
+'1600 PENNSYLVANIA': 0 results
