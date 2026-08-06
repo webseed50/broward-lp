@@ -85,4 +85,12 @@ def main():
         except Exception:
             ftp.close()
     manifest = {"run_utc": started.isoformat(), "seen": len(seen),
+                "fetched": got, "skipped": skip, "inventory": seen}
+    (LOGS / "latest-manifest.json").write_text(json.dumps(manifest, indent=2))
+    (LOGS / f"manifest-{started:%Y%m%dT%H%M%SZ}.json").write_text(json.dumps(manifest, indent=2))
+    log(f"done: saw {len(seen)}, fetched {len(got)}, skipped {len(skip)}")
+    return 0 if seen else 1
+
+if __name__ == "__main__":
+    sys.exit(main())
 
