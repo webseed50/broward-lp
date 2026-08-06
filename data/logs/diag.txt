@@ -8,4 +8,4 @@ port 990 OPEN
 == control: known-good FTP ==
 outbound 21 works
 == runner egress IP ==
-64.236.142.130
+20.186.237.9
