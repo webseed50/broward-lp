@@ -6,61 +6,42 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
-      - name: PB endpoints + Miami-Dade flow
+      - name: Dump MDC shim + PB inline JS
         run: |
           mkdir -p data/logs
-          python3 - > data/logs/pb_mdc_probe.txt 2>&1 <<'PY'
+          python3 - > data/logs/dump_probe.txt 2>&1 <<'PY'
           import re, urllib.request, http.cookiejar
           cj = http.cookiejar.CookieJar()
           op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-          op.addheaders = [("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1")]
+          op.addheaders = [("User-Agent","Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) Safari/604.1")]
           def get(u,t=25): return op.open(u,timeout=t).read().decode("utf-8","replace")
-
-          print("### PALM BEACH: mine JS for endpoints ###")
+          print("##### MIAMI-DADE StandardSearch.aspx FULL BODY #####")
+          try:
+              print(get("https://onlineservices.miamidadeclerk.gov/officialrecords/StandardSearch.aspx"))
+          except Exception as e:
+              print("FAILED:",e)
+          print()
+          print("##### PALM BEACH Home/Index inline endpoints #####")
           try:
               page = get("https://erec.mypalmbeachclerk.com/Home/Index")
-              scripts = re.findall(r'src="(/[^"]+\.js[^"]*)"', page)
-              print("  scripts:", scripts[:10])
-              hits = set()
-              for s in scripts[:8]:
-                  try:
-                      js = get("https://erec.mypalmbeachclerk.com"+s)
-                      for m in re.findall(r'''["'](/[A-Za-z][A-Za-z0-9/_\-]{3,60})["']''', js):
-                          if any(k in m.lower() for k in ("search","document","record","result","export","name","date")):
-                              hits.add(m)
-                  except Exception as e:
-                      print("   js fail",s,e)
-              for h in sorted(hits): print("   EP:",h)
+              for m in sorted(set(re.findall(r'''(?:url|href|action)\s*[:=]\s*["']([^"']{4,90})["']''', page))):
+                  print("  ", m)
+              print("  --- ajax-ish lines ---")
+              for line in page.splitlines():
+                  if ".ajax" in line or "getJSON" in line or "post(" in line.lower():
+                      print("  ", line.strip()[:160])
           except Exception as e:
-              print("  PB FAILED:",e)
-          print()
-          print("### MIAMI-DADE: search flow ###")
-          try:
-              p1 = get("https://onlineservices.miamidadeclerk.gov/officialrecords/StandardSearch.aspx")
-              print("  page1:",len(p1),"bytes")
-              print("  cookies:",[c.name for c in cj])
-              # JS challenge pages usually embed a redirect or cookie-set script
-              for m in re.findall(r'(?:location\.href|window\.location|action)\s*=?\s*["\']([^"\']+)["\']', p1)[:10]:
-                  print("  redirect-ish:", m[:120])
-              for m in re.findall(r'document\.cookie\s*=\s*["\']([^"\']+)', p1)[:5]:
-                  print("  sets-cookie:", m[:120])
-              print("  body sample:", p1[:400].replace("\n"," "))
-              # second attempt after cookies possibly set
-              p2 = get("https://onlineservices.miamidadeclerk.gov/officialrecords/StandardSearch.aspx")
-              print("  page2:",len(p2),"bytes; VIEWSTATE:" , "__VIEWSTATE" in p2, "; form fields:",
-                    re.findall(r'name="([^"]{3,40})"', p2)[:25])
-          except Exception as e:
-              print("  MDC FAILED:",e)
+              print("FAILED:",e)
           PY
-          cat data/logs/pb_mdc_probe.txt
+          cat data/logs/dump_probe.txt
       - name: Commit
         if: always()
         run: |
           git config user.name "broward-lp-bot"
           git config user.email "actions@github.com"
           git add -A data/
-          git diff --staged --quiet || git commit -m "pb mdc probe"
+          git diff --staged --quiet || git commit -m "dump probe"
           git push || true
