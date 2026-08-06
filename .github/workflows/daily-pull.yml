@@ -2,30 +2,36 @@ name: Broward LP daily pull
 on:
   schedule:
     - cron: "30 11 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      backfill_years:
+        description: "Optional: e.g. CY2025 or CY2024,CY2025"
+        required: false
+        default: ""
 permissions:
   contents: write
 jobs:
   pull:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Fetch index files
+      - name: Run pipeline
+        env:
+          BACKFILL_YEARS: ${{ inputs.backfill_years }}
         run: |
+          pip install -q paramiko
           mkdir -p data/logs
-          timeout 600 python fetch_broward.py > data/logs/run.txt 2>&1 || echo "NONZERO EXIT" >> data/logs/run.txt
-          tail -30 data/logs/run.txt
+          python fetch_broward.py > data/logs/run.txt 2>&1 || echo "NONZERO EXIT" >> data/logs/run.txt
+          tail -20 data/logs/run.txt
       - name: Commit
         if: always()
         run: |
           git config user.name "broward-lp-bot"
           git config user.email "actions@github.com"
           git add -A data/
-          git diff --staged --quiet || git commit -m "run $(date -u +%FT%TZ)"
+          git diff --staged --quiet || git commit -m "pull $(date -u +%F)"
           git push || true
-
-
