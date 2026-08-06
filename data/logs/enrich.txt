@@ -1,4 +1,5 @@
 to enrich: 250
-121000267: API FAILED (GURDON,ELIZABETH): <urlopen error timed out>
-hits this run: 211; prop table: 466 rows, 238 with address
+120585315: API FAILED (SACRAMENTO,JULIAN E): <urlopen error timed out>
+120585608: API FAILED (GIL,SHIMON): <urlopen error [Errno 104] Connection reset by peer>
+hits this run: 173; prop table: 716 rows, 411 with address
 csv updated with property columns
