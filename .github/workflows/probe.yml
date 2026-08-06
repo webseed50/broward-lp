@@ -9,52 +9,53 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-      - name: Tri-county feasibility probe
+      - name: PB + Polk probe
         run: |
           mkdir -p data/logs
-          python3 - > data/logs/county_probe.txt 2>&1 <<'PY'
-          import re, urllib.request
-          H = {"User-Agent": "Mozilla/5.0", "Accept": "*/*"}
-          def get(url):
-              r = urllib.request.Request(url, headers=H)
-              return urllib.request.urlopen(r, timeout=25).read().decode("utf-8", "replace")
-          def probe(label, base, paths):
-              print(f"##### {label} #####")
-              for p in paths:
-                  try:
-                      b = get(f"{base}/{p}")
-                      print(f"  {p} -> {len(b)}b :: {b[:250]!r}")
-                  except Exception as e:
-                      print(f"  {p} -> FAILED {e}")
-              print()
-          lm_paths = ["api/searchCriterias/document", "api/documentTypes",
-                      "api/search/searchCriteria", "Home/GetDocumentTypes",
-                      "Document/GetSearchResults", ""]
-          probe("LEE LandmarkWeb", "https://or.leeclerk.org/LandMarkWeb", lm_paths)
-          probe("PALM BEACH erec", "https://erec.mypalmbeachclerk.com", lm_paths)
-          probe("PALM BEACH /LandMarkWeb", "https://erec.mypalmbeachclerk.com/LandMarkWeb", lm_paths)
-          # Polk: discover the official-records search app from the clerk page
+          python3 - > data/logs/pb_polk_probe.txt 2>&1 <<'PY'
+          import re, urllib.request, http.cookiejar
+          cj = http.cookiejar.CookieJar()
+          op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+          op.addheaders = [("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1")]
+          def get(url, t=25):
+              return op.open(url, timeout=t).read().decode("utf-8", "replace")
+          print("### PALM BEACH: landing page links/forms ###")
           try:
-              page = get("https://www.polkclerkfl.gov/184/Official-Records")
-              links = sorted(set(re.findall(r'https?://[a-zA-Z0-9.\-/]*polk[a-zA-Z0-9.\-/]*', page)))
-              print("##### POLK discovered links #####")
-              for l in links[:30]: print("  ", l)
-              for l in links:
-                  if any(k in l.lower() for k in ("ori", "oncore", "records", "search", "pro")):
-                      try:
-                          b = get(l)
-                          print(f"  FETCH {l} -> {len(b)}b :: {b[:200]!r}")
-                      except Exception as e:
-                          print(f"  FETCH {l} -> FAILED {e}")
+              page = get("https://erec.mypalmbeachclerk.com/")
+              for m in re.findall(r'(?:href|action|src)="([^"]+)"', page):
+                  if not m.startswith(("http://www.w3", "/Content", "/Scripts")):
+                      print("  ", m[:120])
+              # try to follow an accept/search link
+              for cand in re.findall(r'href="([^"]*(?:accept|search|agree|or_web)[^"]*)"', page, re.I):
+                  url = cand if cand.startswith("http") else "https://erec.mypalmbeachclerk.com" + cand
+                  try:
+                      nxt = get(url)
+                      print(f"  FOLLOW {url} -> {len(nxt)}b :: {nxt[:200]!r}")
+                  except Exception as e:
+                      print(f"  FOLLOW {url} -> FAILED {e}")
           except Exception as e:
-              print("POLK discovery failed:", e)
+              print("  PB FAILED:", e)
+          print()
+          print("### POLK browserviewor ###")
+          try:
+              b = get("https://apps.polkcountyclerk.net/browserviewor/", t=20)
+              print(f"  root -> {len(b)}b :: {b[:400]!r}")
+          except Exception as e:
+              print("  FAILED:", e)
+          print()
+          print("### LEE retry, browser headers, long timeout ###")
+          try:
+              b = get("https://or.leeclerk.org/LandMarkWeb", t=40)
+              print(f"  -> {len(b)}b :: {b[:300]!r}")
+          except Exception as e:
+              print("  still blocked:", e)
           PY
-          cat data/logs/county_probe.txt
+          cat data/logs/pb_polk_probe.txt
       - name: Commit
         if: always()
         run: |
           git config user.name "broward-lp-bot"
           git config user.email "actions@github.com"
           git add -A data/
-          git diff --staged --quiet || git commit -m "county probe"
+          git diff --staged --quiet || git commit -m "pb polk probe"
           git push || true
