@@ -4,7 +4,7 @@ import ftplib, json, sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-HOST, PORT, USER, PW = "BCFTP.Broward.org", 23, "crpublic", "crpublic"
+HOST, PORT, USER, PW = "BCFTP.Broward.org", 21, "crpublic", "crpublic"
 RAW, LOGS = Path("data/raw"), Path("data/logs")
 IMAGES = {".tif", ".tiff", ".pdf", ".jpg", ".jpeg", ".png", ".gif"}
 MAX_BYTES = 75 * 1024 * 1024
