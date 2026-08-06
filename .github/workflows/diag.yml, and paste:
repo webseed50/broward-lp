@@ -1,0 +1,38 @@
+name: FTP diagnostic
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe
+        run: |
+          mkdir -p data/logs
+          {
+            echo "== DNS =="
+            getent hosts BCFTP.Broward.org || echo "DNS FAILED"
+            echo "== Broward ports =="
+            for p in 21 22 23 990; do
+              timeout 12 bash -c "echo > /dev/tcp/BCFTP.Broward.org/$p" 2>/dev/null \
+                && echo "port $p OPEN" || echo "port $p closed/filtered"
+            done
+            echo "== control: known-good FTP =="
+            timeout 12 bash -c "echo > /dev/tcp/ftp.gnu.org/21" 2>/dev/null \
+              && echo "outbound 21 works" || echo "outbound 21 blocked"
+            echo "== runner egress IP =="
+            curl -s --max-time 10 https://api.ipify.org
+            echo
+          } > data/logs/diag.txt 2>&1
+          cat data/logs/diag.txt
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name "broward-lp-bot"
+          git config user.email "actions@github.com"
+          git add -A data/
+          git diff --staged --quiet || git commit -m "diag $(date -u +%FT%TZ)"
+          git push || true
