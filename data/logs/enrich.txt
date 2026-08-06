@@ -1,4 +1,4 @@
 to enrich: 250
-120613566: API FAILED HTTP Error 500: Internal Server Error
-hits this run: 27; prop table: 330 rows, 27 with address
+121000267: API FAILED (GURDON,ELIZABETH): <urlopen error timed out>
+hits this run: 211; prop table: 466 rows, 238 with address
 csv updated with property columns
