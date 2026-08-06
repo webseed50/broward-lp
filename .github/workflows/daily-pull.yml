@@ -8,19 +8,24 @@ permissions:
 jobs:
   pull:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Fetch index files
-        run: python fetch_broward.py
-      - name: Commit new data
+        run: |
+          mkdir -p data/logs
+          timeout 600 python fetch_broward.py > data/logs/run.txt 2>&1 || echo "NONZERO EXIT" >> data/logs/run.txt
+          tail -30 data/logs/run.txt
+      - name: Commit
+        if: always()
         run: |
           git config user.name "broward-lp-bot"
           git config user.email "actions@github.com"
-          git add data/
-          git diff --staged --quiet || git commit -m "data: pull $(date -u +%F)"
+          git add -A data/
+          git diff --staged --quiet || git commit -m "run $(date -u +%FT%TZ)"
           git push || true
+
 
