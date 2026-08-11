@@ -1,3 +1,4 @@
 to enrich: 250
-hits this run: 178; prop table: 1716 rows, 1115 with address
+120438310: API FAILED (PRIETO,TATYANA AIESHA TROTMAN): <urlopen error [Errno 104] Connection reset by peer>
+hits this run: 174; prop table: 1966 rows, 1289 with address
 csv updated with property columns
