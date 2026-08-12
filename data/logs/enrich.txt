@@ -1,4 +1,5 @@
 to enrich: 250
-120438310: API FAILED (PRIETO,TATYANA AIESHA TROTMAN): <urlopen error [Errno 104] Connection reset by peer>
-hits this run: 174; prop table: 1966 rows, 1289 with address
+120417727: API FAILED (DYKSHTEYN,RUSLAN): <urlopen error timed out>
+120417946: API FAILED (AURELUS,CHERLINE): <urlopen error [Errno 104] Connection reset by peer>
+hits this run: 166; prop table: 2216 rows, 1455 with address
 csv updated with property columns
