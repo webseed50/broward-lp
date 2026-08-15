@@ -1,5 +1,6 @@
 to enrich: 250
-120370361: API FAILED (TOVAR,MICHEL JUNIOR): <urlopen error timed out>
-120370529: API FAILED (LIEBERMAN,ALAN): <urlopen error [Errno 104] Connection reset by peer>
-hits this run: 161; prop table: 2716 rows, 1783 with address
+120341016: API FAILED (SANCHEZ,LEONOR A): <urlopen error timed out>
+120341544: API FAILED (BENZINGER,HARRIET E): <urlopen error timed out>
+120336120: API FAILED (MILLER,WILLIE E): <urlopen error timed out>
+hits this run: 161; prop table: 2966 rows, 1944 with address
 csv updated with property columns
