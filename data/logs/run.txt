@@ -1,14 +1,11 @@
-Traceback (most recent call last):
-  File "/home/runner/work/broward-lp/broward-lp/fetch_broward.py", line 115, in <module>
-    sys.exit(main())
-             ^^^^^^
-  File "/home/runner/work/broward-lp/broward-lp/fetch_broward.py", line 83, in main
-    tr, sftp = connect()
-               ^^^^^^^^^
-  File "/home/runner/work/broward-lp/broward-lp/fetch_broward.py", line 38, in connect
-    tr = paramiko.Transport((HOST, PORT))
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages/paramiko/transport.py", line 471, in __init__
-    raise SSHException(
-paramiko.ssh_exception.SSHException: Unable to connect to BCFTP.Broward.org: [Errno 110] Connection timed out
-NONZERO EXIT
+07-29-2026doc-ver.txt: 34 LP docs, 357 party rows
+07-30-2026doc-ver.txt: 17 LP docs, 147 party rows
+07-31-2026doc-ver.txt: 22 LP docs, 82 party rows
+08-03-2026doc-ver.txt: 29 LP docs, 129 party rows
+08-04-2026doc-ver.txt: 11 LP docs, 51 party rows
+08-05-2026doc-ver.txt: 28 LP docs, 132 party rows
+08-06-2026doc-ver.txt: 24 LP docs, 115 party rows
+08-07-2026doc-ver.txt: 15 LP docs, 62 party rows
+08-10-2026doc-ver.txt: 23 LP docs, 134 party rows
+08-11-2026doc-ver.txt: 20 LP docs, 88 party rows
+db total: 5618 LP records; csv rows: 5618
