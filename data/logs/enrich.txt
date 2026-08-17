@@ -1,3 +1,3 @@
 to enrich: 250
-hits this run: 160; prop table: 3216 rows, 2104 with address
+hits this run: 175; prop table: 3466 rows, 2279 with address
 csv updated with property columns
