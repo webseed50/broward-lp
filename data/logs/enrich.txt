@@ -1,3 +1,5 @@
 to enrich: 250
-hits this run: 128; prop table: 4716 rows, 3032 with address
+120098440: API FAILED (GITTER,WILLIAM M): <urlopen error timed out>
+120098441: API FAILED (BAILEY,VALARIE R): <urlopen error timed out>
+hits this run: 150; prop table: 4966 rows, 3182 with address
 csv updated with property columns
