@@ -5,6 +5,7 @@
 09-15-2026doc-ver.txt: 21 LP docs, 80 party rows
 09-16-2026doc-ver.txt: 20 LP docs, 80 party rows
 09-17-2026doc-ver.txt: 21 LP docs, 84 party rows
+09-18-2026doc-ver.txt: 31 LP docs, 116 party rows
 09-21-2026doc-ver.txt: 20 LP docs, 73 party rows
 09-22-2026doc-ver.txt: 22 LP docs, 81 party rows
-db total: 6227 LP records; csv rows: 6227
+db total: 6258 LP records; csv rows: 6258
