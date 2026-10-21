@@ -1,3 +1,4 @@
-to enrich: 15
-hits this run: 12; prop table: 6708 rows, 4425 with address
+to enrich: 30
+121158245: API FAILED (CROWELL,PHILIP): HTTP Error 500: Internal Server Error
+hits this run: 27; prop table: 6738 rows, 4452 with address
 csv updated with property columns
